@@ -470,13 +470,13 @@ class CSSLisible {
             break;
         case 4: // -> HSL
             // Named colors to Hex
-            $keynamed_colors_patterns = array_map(array($this,'get_keynamed_colors_patterns'), $keyword_named_colors);
-            $hex_colors_patterns = array_map(array($this,'get_coded_colors_patterns'), $hex_named_colors);
-            $css_to_compress = preg_replace($keynamed_colors_patterns, $hex_colors_patterns, $css_to_compress);
+            $keynamed_colors_patterns = array_map( array( $this, 'get_keynamed_colors_patterns' ), $keyword_named_colors );
+            $hex_colors_patterns = array_map( array( $this, 'get_coded_colors_patterns' ), $hex_named_colors );
+            $css_to_compress = preg_replace( $keynamed_colors_patterns, $hex_colors_patterns, $css_to_compress );
             // Hex to RGB
             $css_to_compress = preg_replace_callback( '#(:[^;]*)\#((([a-fA-F\d]){3}){1,2})([^;]*;)#', array( $this, 'hex2rgb' ), $css_to_compress );
             // RGB to HSL
-            $css_to_compress = preg_replace_callback('#(:[^;]*)rgb\((((\d){1,3}[\s]*,[\s]*){2}(\d){1,3})\)([^;]*;)#i', array($this, 'rgb2hsl'), $css_to_compress);
+            $css_to_compress = preg_replace_callback( '#(:[^;]*)rgb\((((\d){1,3}[\s]*,[\s]*){2}(\d){1,3})\)([^;]*;)#i', array( $this, 'rgb2hsl' ), $css_to_compress );
             break;
         }
 
@@ -524,103 +524,103 @@ class CSSLisible {
         return round( $percent*255/100 );
     }
 
-    private function hsl2hex($matches) {
-        $hsl = explode(',', str_replace(array(' ', '%'), '', $matches[2]));
-        list ($h, $s, $l) = array($hsl[0]/360, $hsl[1]/100, $hsl[2]/100);
+    private function hsl2hex( $matches ) {
+        $hsl = explode( ',', str_replace( array( ' ', '%' ), '', $matches[2] ) );
+        list ( $h, $s, $l ) = array( $hsl[0]/360, $hsl[1]/100, $hsl[2]/100 );
 
-        if ($s == 0) {
+        if ( $s == 0 ) {
             $r = $l * 255;
             $g = $l * 255;
             $b = $l * 255;
         }
         else {
-            $v2 = ($l < 0.5) ? $l * (1 + $s) : ($l + $s) - $s * $l;
+            $v2 = ( $l < 0.5 ) ? $l * ( 1 + $s ) : ( $l + $s ) - $s * $l;
             $v1 = 2 * $l - $v2;
 
-            $r = round(255 * $this->hue2rgb($v1, $v2, $h + 1/3));
-            $g = round(255 * $this->hue2rgb($v1, $v2, $h));
-            $b = round(255 * $this->hue2rgb($v1, $v2, $h - 1/3));
+            $r = round( 255 * $this->hue2rgb( $v1, $v2, $h + 1/3 ) );
+            $g = round( 255 * $this->hue2rgb( $v1, $v2, $h ) );
+            $b = round( 255 * $this->hue2rgb( $v1, $v2, $h - 1/3 ) );
         }
 
         // Convert to hex
-        $r = dechex($r);
-        $g = dechex($g);
-        $b = dechex($b);
+        $r = dechex( $r );
+        $g = dechex( $g );
+        $b = dechex( $b );
 
         // Make sure we get 2 digits for decimals
-        $r = (strlen("" . $r) === 1) ? "0" . $r : $r;
-        $g = (strlen("" . $g) === 1) ? "0" . $g : $g;
-        $b = (strlen("" . $b) === 1) ? "0" . $b : $b;
+        $r = ( strlen( "" . $r ) === 1 ) ? "0" . $r : $r;
+        $g = ( strlen( "" . $g ) === 1 ) ? "0" . $g : $g;
+        $b = ( strlen( "" . $b ) === 1 ) ? "0" . $b : $b;
 
         return $matches[1] . '#' . $r . $g . $b . $matches[6];
     }
 
     // Converts HSL color string to its RGB equivalent
-    private function hsl2rgb($matches) {
-        $hsl = explode(',', str_replace(array(' ', '%'), '', $matches[2]));
-        list($h, $s, $l) = $hsl;
+    private function hsl2rgb( $matches ) {
+        $hsl = explode( ',', str_replace( array( ' ', '%' ), '', $matches[2] ) );
+        list( $h, $s, $l ) = $hsl;
         $s /= 100;
         $l /= 100;
 
         $r;
         $g;
         $b;
-        if ($s == 0) {
+        if ( $s == 0 ) {
             $r = $g = $b = $l;
         }
         else {
-            $q = $l < 0.5 ? $l * (1 + $s) : $l + $s - $l * $s;
+            $q = $l < 0.5 ? $l * ( 1 + $s ) : $l + $s - $l * $s;
             $p = 2 * $l - $q;
-            $r = $this->hue2rgb($p, $q, $h + 1/3);
-            $g = $this->hue2rgb($p, $q, $h);
-            $b = $this->hue2rgb($p, $q, $h - 1/3);
+            $r = $this->hue2rgb( $p, $q, $h + 1/3 );
+            $g = $this->hue2rgb( $p, $q, $h );
+            $b = $this->hue2rgb( $p, $q, $h - 1/3 );
         }
 
-        $r = round($r * 255);
-        $g = round($g * 255);
-        $b = round($b * 255);
+        $r = round( $r * 255 );
+        $g = round( $g * 255 );
+        $b = round( $b * 255 );
 
         $rgb = 'rgb(' . $r  . ',' . $g . ',' . $b . ')';
         return  $matches[1] . $rgb . $matches[6];
     }
 
-    private function hue2rgb($p, $q, $t) {
-        if ($t < 0) $t += 1;
-        if ($t > 1) $t -= 1;
-        if ($t < 1/6) return $p + ($q - $p) * 6 * $t;
-        if ($t < 1/2) return $q;
-        if ($t < 2/3) return $p + ($q - $p) * (2/3 - $t) * 6;
+    private function hue2rgb( $p, $q, $t ) {
+        if ( $t < 0 ) $t += 1;
+        if ( $t > 1 ) $t -= 1;
+        if ( $t < 1/6 ) return $p + ( $q - $p ) * 6 * $t;
+        if ( $t < 1/2 ) return $q;
+        if ( $t < 2/3 ) return $p + ( $q - $p ) * ( 2/3 - $t ) * 6;
         return $p;
     }
 
-    private function rgb2hsl($matches) {
-        $rgb = explode(',', str_replace(' ', '', $matches[2]));
+    private function rgb2hsl( $matches ) {
+        $rgb = explode( ',', str_replace( ' ', '', $matches[2] ) );
         $r = $rgb[0] / 2.55;
         $g = $rgb[1] / 2.55;
         $b = $rgb[2] / 2.55;
 
-        $max = max($r, $g, $b);
-        $min = min($r, $g, $b);
+        $max = max( $r, $g, $b );
+        $min = min( $r, $g, $b );
         $d = $max - $min;
         $h = 0;
         $s = 0;
-        $l = round(($min + $max) / 2);
+        $l = round( ( $min + $max ) / 2 );
 
-        if ($d != 0) {
-            $s = round(($d * 100) / (100 - abs(2 * $l - 100)));
+        if ( $d != 0 ) {
+            $s = round( ( $d * 100 ) / ( 100 - abs( 2 * $l - 100 ) ) );
 
-            switch ($max) {
-                case $r:
-                $h = ($g - $b) / $d + ($g < $b ? 6 : 0);
+            switch ( $max ) {
+            case $r:
+                $h = ( $g - $b ) / $d + ( $g < $b ? 6 : 0 );
                 break;
-                case $g:
-                $h = ($b - $r) / $d + 2;
+            case $g:
+                $h = ( $b - $r ) / $d + 2;
                 break;
-                case $b:
-                $h = ($r - $g) / $d + 4;
+            case $b:
+                $h = ( $r - $g ) / $d + 4;
                 break;
             }
-            $h = round($h * 60);
+            $h = round( $h * 60 );
         }
 
         $hsl = 'hsl('. $h . ',' . $s . '%,' . $l . '%)';
