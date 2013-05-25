@@ -469,13 +469,13 @@ class CSSLisible {
             break;
         case 4: // -> HSL
             // Named colors to Hex
-            //$keynamed_colors_patterns = array_map(array($this,'get_keynamed_colors_patterns'), $keyword_named_colors);
-            //$hex_colors_patterns = array_map(array($this,'get_coded_colors_patterns'), $hex_named_colors);
-            //$css_to_compress = preg_replace($keynamed_colors_patterns, $hex_colors_patterns, $css_to_compress);
+            $keynamed_colors_patterns = array_map(array($this,'get_keynamed_colors_patterns'), $keyword_named_colors);
+            $hex_colors_patterns = array_map(array($this,'get_coded_colors_patterns'), $hex_named_colors);
+            $css_to_compress = preg_replace($keynamed_colors_patterns, $hex_colors_patterns, $css_to_compress);
             // Hex to RGB
-            //$css_to_compress = preg_replace_callback( '#(:[^;]*)\#((([a-fA-F\d]){3}){1,2})([^;]*;)#', array( $this, 'hex2rgb' ), $css_to_compress );
+            $css_to_compress = preg_replace_callback( '#(:[^;]*)\#((([a-fA-F\d]){3}){1,2})([^;]*;)#', array( $this, 'hex2rgb' ), $css_to_compress );
             // RGB to HSL
-            // -- TODO
+            $css_to_compress = preg_replace_callback('#(:[^;]*)rgb\((((\d){1,3}[\s]*,[\s]*){2}(\d){1,3})\)([^;]*;)#i', array($this, 'rgb2hsl'), $css_to_compress);
             break;
         }
 
@@ -521,6 +521,40 @@ class CSSLisible {
     // Conversion d'un des triplets RGB de pourcentage à une valeur chiffrée
     private function rgb_part_percent2value( $percent ) {
         return round( $percent*255/100 );
+    }
+
+    private function rgb2hsl($matches) {
+        $rgb = explode(',', str_replace(' ', '', $matches[2]));
+        $r = $rgb[0] / 2.55;
+        $g = $rgb[1] / 2.55;
+        $b = $rgb[2] / 2.55;
+
+        $max = max($r, $g, $b);
+        $min = min($r, $g, $b);
+        $d = $max - $min;
+        $h = 0;
+        $s = 0;
+        $l = round(($min + $max) / 2);
+
+        if ($d != 0) {
+            $s = round(($d * 100) / (100 - abs(2 * $l - 100)));
+
+            switch ($max) {
+                case $r:
+                $h = ($g - $b) / $d + ($g < $b ? 6 : 0);
+                break;
+                case $g:
+                $h = ($b - $r) / $d + 2;
+                break;
+                case $b:
+                $h = ($r - $g) / $d + 4;
+                break;
+            }
+            $h = round($h * 60);
+        }
+
+        $hsl = 'hsl('. $h . ',' . $s . '%,' . $l . '%)';
+        return $matches[1] . $hsl . $matches[6];
     }
 
     // Formattage des codes couleurs hexa selon le choix en option
