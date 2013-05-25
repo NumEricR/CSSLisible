@@ -439,9 +439,10 @@ class CSSLisible {
         switch ( $this->get_option( 'colors_format' ) ) {
         case 1: // -> Named colors
             // HSL to RGB
+            //$css_to_compress = preg_replace_callback('#(:[^;]*)hsl\(((\d){1,3}[\s]*,[\s]*(\d){1,3}%[\s]*,[\s]*(\d){1,3}%)\)([^;]*;)#i', array($this, 'hsl2rgb'), $css_to_compress);
             // or
             // HSL to Hex
-            // -- TODO
+            //$css_to_compress = preg_replace_callback('#(:[^;]*)hsl\(((\d){1,3}[\s]*,[\s]*(\d){1,3}%[\s]*,[\s]*(\d){1,3}%)\)([^;]*;)#i', array($this, 'hsl2hex'), $css_to_compress);
             // RGB to Hex
             $css_to_compress = preg_replace_callback( '#(:[^;]*)rgb\((((\d){1,3}[\s]*,[\s]*){2}(\d){1,3})\)([^;]*;)#i', array( $this, 'rgb2hex' ), $css_to_compress );
             // Hex to Named colors
@@ -521,6 +522,75 @@ class CSSLisible {
     // Conversion d'un des triplets RGB de pourcentage à une valeur chiffrée
     private function rgb_part_percent2value( $percent ) {
         return round( $percent*255/100 );
+    }
+
+    private function hsl2hex($matches) {
+        $hsl = explode(',', str_replace(array(' ', '%'), '', $matches[2]));
+        list ($h, $s, $l) = array($hsl[0]/360, $hsl[1]/100, $hsl[2]/100);
+
+        if ($s == 0) {
+            $r = $l * 255;
+            $g = $l * 255;
+            $b = $l * 255;
+        }
+        else {
+            $v2 = ($l < 0.5) ? $l * (1 + $s) : ($l + $s) - $s * $l;
+            $v1 = 2 * $l - $v2;
+
+            $r = round(255 * $this->hue2rgb($v1, $v2, $h + 1/3));
+            $g = round(255 * $this->hue2rgb($v1, $v2, $h));
+            $b = round(255 * $this->hue2rgb($v1, $v2, $h - 1/3));
+        }
+
+        // Convert to hex
+        $r = dechex($r);
+        $g = dechex($g);
+        $b = dechex($b);
+
+        // Make sure we get 2 digits for decimals
+        $r = (strlen("" . $r) === 1) ? "0" . $r : $r;
+        $g = (strlen("" . $g) === 1) ? "0" . $g : $g;
+        $b = (strlen("" . $b) === 1) ? "0" . $b : $b;
+
+        return $matches[1] . '#' . $r . $g . $b . $matches[6];
+    }
+
+    // Converts HSL color string to its RGB equivalent
+    private function hsl2rgb($matches) {
+        $hsl = explode(',', str_replace(array(' ', '%'), '', $matches[2]));
+        list($h, $s, $l) = $hsl;
+        $s /= 100;
+        $l /= 100;
+
+        $r;
+        $g;
+        $b;
+        if ($s == 0) {
+            $r = $g = $b = $l;
+        }
+        else {
+            $q = $l < 0.5 ? $l * (1 + $s) : $l + $s - $l * $s;
+            $p = 2 * $l - $q;
+            $r = $this->hue2rgb($p, $q, $h + 1/3);
+            $g = $this->hue2rgb($p, $q, $h);
+            $b = $this->hue2rgb($p, $q, $h - 1/3);
+        }
+
+        $r = round($r * 255);
+        $g = round($g * 255);
+        $b = round($b * 255);
+
+        $rgb = 'rgb(' . $r  . ',' . $g . ',' . $b . ')';
+        return  $matches[1] . $rgb . $matches[6];
+    }
+
+    private function hue2rgb($p, $q, $t) {
+        if ($t < 0) $t += 1;
+        if ($t > 1) $t -= 1;
+        if ($t < 1/6) return $p + ($q - $p) * 6 * $t;
+        if ($t < 1/2) return $q;
+        if ($t < 2/3) return $p + ($q - $p) * (2/3 - $t) * 6;
+        return $p;
     }
 
     private function rgb2hsl($matches) {
