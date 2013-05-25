@@ -132,7 +132,8 @@ class CSSLisible {
             _( 'Inchangé' ),
             _( 'Noms' ),
             _( 'Hex' ),
-            _( 'RGB' )
+            _( 'RGB' ),
+            _( 'HSL' ),
         );
         $this->listing_hex_colors_formats = array(
             _( 'Inchangé' ),
@@ -437,6 +438,10 @@ class CSSLisible {
 
         switch ( $this->get_option( 'colors_format' ) ) {
         case 1: // -> Named colors
+            // HSL to RGB
+            // or
+            // HSL to Hex
+            // -- TODO
             // RGB to Hex
             $css_to_compress = preg_replace_callback( '#(:[^;]*)rgb\((((\d){1,3}[\s]*,[\s]*){2}(\d){1,3})\)([^;]*;)#i', array( $this, 'rgb2hex' ), $css_to_compress );
             // Hex to Named colors
@@ -447,6 +452,10 @@ class CSSLisible {
             $keynamed_colors_patterns = array_map( array( $this, 'get_keynamed_colors_patterns' ), $keyword_named_colors );
             $hex_colors_patterns = array_map( array( $this, 'get_coded_colors_patterns' ), $hex_named_colors );
             $css_to_compress = preg_replace( $keynamed_colors_patterns, $hex_colors_patterns, $css_to_compress );
+            // HSL to RGB
+            // or
+            // HSL to Hex
+            // -- TODO
             // RGB to Hex
             $css_to_compress = preg_replace_callback( '#(:[^;]*)rgb\((((\d){1,3}[\s]*,[\s]*){2}(\d){1,3})\)([^;]*;)#i', array( $this, 'rgb2hex' ), $css_to_compress );
             break;
@@ -457,6 +466,16 @@ class CSSLisible {
             $css_to_compress = preg_replace( $keynamed_colors_patterns, $hex_colors_patterns, $css_to_compress );
             // Hex to RGB
             $css_to_compress = preg_replace_callback( '#(:[^;]*)\#((([a-fA-F\d]){3}){1,2})([^;]*;)#', array( $this, 'hex2rgb' ), $css_to_compress );
+            break;
+        case 4: // -> HSL
+            // Named colors to Hex
+            //$keynamed_colors_patterns = array_map(array($this,'get_keynamed_colors_patterns'), $keyword_named_colors);
+            //$hex_colors_patterns = array_map(array($this,'get_coded_colors_patterns'), $hex_named_colors);
+            //$css_to_compress = preg_replace($keynamed_colors_patterns, $hex_colors_patterns, $css_to_compress);
+            // Hex to RGB
+            //$css_to_compress = preg_replace_callback( '#(:[^;]*)\#((([a-fA-F\d]){3}){1,2})([^;]*;)#', array( $this, 'hex2rgb' ), $css_to_compress );
+            // RGB to HSL
+            // -- TODO
             break;
         }
 
